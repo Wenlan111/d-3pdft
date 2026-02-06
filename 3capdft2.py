@@ -153,8 +153,8 @@ lcasscfs2.kernel()
 #ldft2 = fragments.FragmentDFT(lgeo2,'pbe0')
 
 #rgeo1
-w1al = 0.0336
-w2al = 0.9664
+w1al = 0.9664
+w2al = 0.0336
 
 rgeo1 = gto.Mole()
 rgeo1.atom = "rgeo.xyz"

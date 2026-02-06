@@ -51,8 +51,8 @@ def make_frag_mf(mol, xc='PBE', sigma_closed=0.02):
         mf.damp = 0.15
     else:
         # open-shell (doublet/triplet): NO smearing; keep spin sector stable
-        mf = mf.newton()
-        #mf = smearing_(mf, sigma=0.2, method='fermi', fix_spin=True)
+        #mf = mf.newton()
+        mf = smearing_(mf, sigma=0.2, method='fermi', fix_spin=True)
         # Newton 通常不需要强 damping；给小一点的 level_shift 防止数值病态
         mf.level_shift = 0.2
         mf.damp = 0.15

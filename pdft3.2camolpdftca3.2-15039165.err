@@ -1,0 +1,6 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) xalt/2.10.45
+lmod: xalt was automatically unloaded
+Overwritten attributes  Vp  of <class 'pyscf.scf.uhf.UHF'>
