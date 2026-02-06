@@ -95,7 +95,7 @@ Al    P
 Al    D
       0.3250000              1.0000000''')
 #ref pbe calculation for O2/Al50 at 2.4A
-mol, scf_dict = scfchk.load_scf('al2.4.chk')
+mol, scf_dict = scfchk.load_scf('al3.chk')
 mf = dft.UKS(mol)
 mo_coeff  = scf_dict['mo_coeff']
 mo_occ    = scf_dict['mo_occ']
@@ -105,7 +105,7 @@ Daref, Dbref = mf.make_rdm1(mo_coeff, mo_occ)
 
 #total geo
 geo = gto.Mole()
-geo.atom = "3.xyz"
+geo.atom = "5.xyz"
 geo.unit = 'angstrom'
 geo.basis = {'O': obasis, 'Al': albasis}
 geo.charge = 0
@@ -153,8 +153,8 @@ lcasscfs2.kernel()
 #ldft2 = fragments.FragmentDFT(lgeo2,'pbe0')
 
 #rgeo1
-w1al = 0.9328
-w2al = 0.0672
+w1al = 0.0336
+w2al = 0.9664
 
 rgeo1 = gto.Mole()
 rgeo1.atom = "rgeo.xyz"
@@ -169,8 +169,8 @@ rgeo2 = gto.Mole()
 rgeo2.atom = "rgeo.xyz"
 rgeo2.unit = 'angstrom'
 rgeo2.basis = {'ghost-O': '6-31g', 'Al': albasis}
-rgeo2.charge = 1
-rgeo2.spin = 1
+rgeo2.charge = 2
+rgeo2.spin = 2
 rgeo2.build()
 rdft2 = fragments.FragmentDFT(rgeo2,'pbe',metal = True)
 #rdft2.dftsolver = remove_linear_dep_(rdft2.dftsolver, lindep=1e-4)
@@ -200,7 +200,7 @@ ao_values_l2 = dft.numint.eval_ao(lgeo2, coords, deriv=1)
 phi_l1, phi_l1_x, phi_l1_y, phi_l1_z = ao_values_l1  
 phi_l2, phi_l2_x, phi_l2_y, phi_l2_z = ao_values_l2 
 
-#data = pickle.load(open("pdft3_checkpoint.pkl", "rb"))
+#data = pickle.load(open("pdft3.2_checkpoint.pkl", "rb"))
 # define init parameters
 #vp = data["vp"]
 vp = 0
@@ -239,7 +239,7 @@ L1 = np.sum(np.abs(nf-nref)*w)
 print(f"init Ef={Ef:.5f} L1={L1:.4f}.")
 Efold = Ef
 nold = nf
-checkpoint = "pdft3_checkpoint.pkl"
+checkpoint = "pdft3.2_checkpoint.pkl"
 #PDFT-scf-LOOP
 #start = data["step"] + 1
 #for itera in range(start, len(steps)):
