@@ -23,42 +23,6 @@ from pyscf.scf.addons import remove_linear_dep_, smearing_
 from pyscf.dft.gen_grid import treutler_prune
 
 
-def make_frag_mf(mol, xc='PBE', sigma_closed=0.02):
-    mf = dft.UKS(mol)
-    mf.xc = xc
-
-    # RI-J + linear-dep handling (ghosts)
-    mf = mf.density_fit(auxbasis='weigend')
-    mf = remove_linear_dep_(mf, lindep=1e-4)
-
-    # ---- Common SCF / grid settings ----
-    mf.direct_scf = True
-    mf.max_cycle = 200
-    mf.conv_tol = 1e-6          # 建议收紧：PDfT 外层更吃这个
-    mf.verbose = 4
-
-    # DFT grids (if you really need level=3)
-    mf.grids.level = 3
-    mf.grids.prune = treutler_prune
-    mf.small_rho_cutoff = 1e-6
-    mf.diis_space = 12
-
-    # ---- Branch settings ----
-    if mol.spin == 0:
-        # closed-shell metallic fragment: smearing helps
-        mf = smearing_(mf, sigma=sigma_closed, method='fermi', fix_spin=False)
-        mf.level_shift = 0.2
-        mf.damp = 0.15
-    else:
-        # open-shell (doublet/triplet): NO smearing; keep spin sector stable
-        #mf = mf.newton()
-        mf = smearing_(mf, sigma=0.2, method='fermi', fix_spin=True)
-        # Newton 通常不需要强 damping；给小一点的 level_shift 防止数值病态
-        mf.level_shift = 0.2
-        mf.damp = 0.15
-        #mf = mf.newton()
-    return mf
-
 # HF
 class FragmentHF:
     def __init__(self, mol):
@@ -138,13 +102,52 @@ class FragmentDFT:
         Da, Db = self._dm_to_DaDb(dm)
         self._last_normal_dm = (Da, Db)
         self._last_normal_cycle = int(cyc)
-    def __init__(self, mol, xc,metal = False):
+    def __init__(self, mol, xc, metal=False,
+                 smearing=None, newton=None,
+                 sigma=None, smearing_method=None,
+                 fix_spin_smearing=None):
         self.mol = mol
+
         if metal:
-            mf =  make_frag_mf(mol, xc) # does not necessarily have to be UKS, right?
-           
+             if (mol.spin==0):
+                 mf = dft.RKS(mol)
+             else:
+                 mf = dft.UKS(mol)
+                 # RI-J + linear-dep handling (ghosts)
+             mf.xc = xc
+             mf = mf.density_fit(auxbasis='weigend')
+             mf = remove_linear_dep_(mf, lindep=1e-4)
+
+             mf.direct_scf = True
+             mf.max_cycle = 200
+             mf.conv_tol = 1e-6 
+             mf.verbose = 4
+
+             mf.grids.level = 3
+             mf.grids.prune = treutler_prune
+             mf.small_rho_cutoff = 1e-6
+             mf.diis_space = 12
         else:
-            mf  = dft.UKS(mol) 
+             mf = dft.UKS(mol)
+             mf.xc = xc
+        if smearing:
+             if sigma is None:
+                 sigma = 0.02 
+             if smearing_method is None:
+                 smearing_method = "fermi"
+             if fix_spin_smearing is None:
+                 fix_spin_smearing = (mol.spin != 0)
+             mf = smearing_(mf, sigma=sigma, method=smearing_method, fix_spin=fix_spin_smearing)
+             mf.level_shift = 0.2
+             mf.damp = 0.15
+        if newton:
+             mf = mf.newton()
+             mf.level_shift = 0.2
+             mf.damp = 0.15
+
+        if smearing and newton:
+             raise ValueError("Choose smearing OR newton (not both).")
+
         self.dftsolver = mf
         self.solver = self.dftsolver
         self._last_normal_dm = None
